@@ -339,6 +339,19 @@ KeyID EiKeyState::mapKeyFromKeyval(uint32_t keyval) const
   return keyid;
 }
 
+KeyID EiKeyState::mapBaseKeyFromKeyval(uint32_t keyval) const
+{
+  const auto layout = xkb_state_key_get_layout(m_xkbState, keyval);
+  const xkb_keysym_t *syms = nullptr;
+  const int nsyms =
+      xkb_keymap_key_get_syms_by_level(m_xkbKeymap, keyval, layout == XKB_LAYOUT_INVALID ? 0 : layout, 0, &syms);
+  if (nsyms <= 0) {
+    return kKeyNone;
+  }
+
+  return XDGKeyUtil::mapKeySymToKeyID(static_cast<KeySym>(syms[0]));
+}
+
 void EiKeyState::updateXkbState(uint32_t keyval, bool isPressed)
 {
   LOG_VERBOSE("update key state: keyval=%d pressed=%i", keyval, isPressed);

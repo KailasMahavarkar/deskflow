@@ -34,6 +34,17 @@ public:
   std::int32_t pollActiveGroup() const override;
   void pollPressedKeys(KeyButtonSet &pressedKeys) const override;
   KeyID mapKeyFromKeyval(std::uint32_t keyval) const;
+  /**
+   * @brief Map a key to the KeyID of its unmodified (level 1) symbol.
+   *
+   * Unlike mapKeyFromKeyval(), the result does not depend on Shift, Caps Lock or other
+   * level-changing modifiers, so `Shift+L` maps to 'l'. Hotkeys are configured with the
+   * unmodified key (e.g. `keystroke(control+alt+shift+l)`), so this is what hotkey matching
+   * must compare against.
+   *
+   * @return the KeyID, or kKeyNone if the key has no symbol on level 1.
+   */
+  KeyID mapBaseKeyFromKeyval(std::uint32_t keyval) const;
   void updateXkbState(std::uint32_t keyval, bool isPressed);
   void updateLockedModifiers(xkb_mod_mask_t lockedMods);
   void clearStaleModifiers() override;

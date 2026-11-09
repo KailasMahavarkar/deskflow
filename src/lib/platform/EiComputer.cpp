@@ -779,8 +779,14 @@ void EiComputer::onKeyEvent(ei_event *event)
       keycode, keyid, mask
   );
 
-  if (m_isPrimary && onHotkey(keyid, pressed, mask)) {
-    return;
+  // Hotkeys are configured with the unmodified key, e.g. `keystroke(control+alt+shift+l)`,
+  // but keyid follows the current modifier state (Shift+L gives 'L'), so match against
+  // the unmodified key as well.
+  if (m_isPrimary) {
+    const KeyID baseKeyid = m_keyState->mapBaseKeyFromKeyval(keyval);
+    if (onHotkey(keyid, pressed, mask) || (baseKeyid != keyid && baseKeyid != kKeyNone && onHotkey(baseKeyid, pressed, mask))) {
+      return;
+    }
   }
 
   if (keyid != kKeyNone) {

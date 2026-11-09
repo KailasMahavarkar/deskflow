@@ -41,12 +41,19 @@ xkb_keycodes "test" {
     minimum = 8;
     maximum = 255;
     <LFSH> = 50;
+    <AC09> = 46;
     <NMLK> = 77;
 };
 xkb_types "test" {
     type "ONE_LEVEL" {
         modifiers = none;
         level_name[Level1] = "Any";
+    };
+    type "TWO_LEVEL" {
+        modifiers = Shift;
+        map[Shift] = Level2;
+        level_name[Level1] = "Base";
+        level_name[Level2] = "Shift";
     };
 };
 xkb_compat "test" {
@@ -59,6 +66,7 @@ xkb_compat "test" {
 };
 xkb_symbols "test" {
     key <LFSH> { [ Shift_L ] };
+    key <AC09> { type = "TWO_LEVEL", [ l, L ] };
     key <NMLK> { [ Num_Lock ] };
     modifier_map Shift { <LFSH> };
     modifier_map Mod2 { <NMLK> };
@@ -68,6 +76,7 @@ xkb_symbols "test" {
 // XKB keycodes for TestKeymap.
 constexpr std::uint32_t LeftShiftKeycode = 50;
 constexpr std::uint32_t NumLockKeycode = 77;
+constexpr std::uint32_t LKeycode = 46;
 } // namespace
 
 void EiKeyStateTests::initTestCase()
@@ -132,6 +141,30 @@ void EiKeyStateTests::updateLockedModifiers_compositorLockState_numLockFollowsCo
   // NumLock toggled off locally
   keyState.updateLockedModifiers(0);
   QVERIFY((keyState.pollActiveModifiers() & KeyModifierNumLock) == 0);
+}
+
+
+
+void EiKeyStateTests::mapBaseKeyFromKeyval_shiftHeld_unshiftedKey()
+{
+  TestAppUtil appUtil;
+  EventQueue eventQueue;
+  deskflow::EiKeyState keyState(nullptr, &eventQueue);
+
+  QTemporaryFile keymapFile;
+  QVERIFY(keymapFile.open());
+  const QByteArray keymapData = QByteArray::fromRawData(TestKeymap, sizeof(TestKeymap) - 1);
+  QCOMPARE(keymapFile.write(keymapData), keymapData.size());
+  QVERIFY(keymapFile.flush());
+  keyState.init(keymapFile.handle(), keymapFile.size());
+
+  QCOMPARE(keyState.mapBaseKeyFromKeyval(LKeycode), static_cast<KeyID>('l'));
+
+  // With Shift held the key produces 'L', but hotkeys are configured with the
+  // unmodified key (e.g. keystroke(control+alt+shift+l)), so the base key must stay 'l'.
+  keyState.updateXkbState(LeftShiftKeycode, true);
+  QCOMPARE(keyState.mapKeyFromKeyval(LKeycode), static_cast<KeyID>('L'));
+  QCOMPARE(keyState.mapBaseKeyFromKeyval(LKeycode), static_cast<KeyID>('l'));
 }
 
 QTEST_MAIN(EiKeyStateTests)

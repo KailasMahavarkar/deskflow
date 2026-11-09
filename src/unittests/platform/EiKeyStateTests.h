@@ -19,6 +19,7 @@ private Q_SLOTS:
   void initTestCase();
   void clearStaleModifiers_shiftDownAndNumLockOn_shiftClearedAndNumLockPreserved();
   void updateLockedModifiers_compositorLockState_numLockFollowsCompositor();
+  void mapBaseKeyFromKeyval_shiftHeld_unshiftedKey();
 
 private:
   Arch m_arch;
