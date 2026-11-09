@@ -9,6 +9,8 @@
 
 #include "server/Config.h"
 
+#include <sstream>
+
 class OnlySystemFilter : public InputFilter::Condition
 {
 public:
@@ -159,6 +161,22 @@ void ServerConfigTests::equalityCheck_diff_neighbours3()
   QVERIFY(b.addComputer("computerC"));
   QVERIFY(b.connect("computerA", Direction::Bottom, 0.0f, 0.5f, "computerC", 0.5f, 1.0f));
   QVERIFY(a != b);
+}
+
+void ServerConfigTests::readOptions_keystrokeAndMousebutton_bothRulesParsed()
+{
+  std::istringstream configText(
+      "section: options\n"
+      "\tkeystroke(control+alt+k) = lockCursorToScreen(toggle)\n"
+      "\tmousebutton(control+1) = lockCursorToScreen(toggle)\n"
+      "\trelativeMouseMoves = true\n"
+      "end\n"
+  );
+  Config config(nullptr);
+  configText >> config;
+
+  // the option line is ignored (options come from the settings), both hotkey rules are read
+  QCOMPARE(config.getInputFilter()->getNumRules(), 2u);
 }
 
 QTEST_MAIN(ServerConfigTests)
